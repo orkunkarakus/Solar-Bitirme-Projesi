@@ -2,12 +2,37 @@
 require('dotenv').config();
 var io = require('socket.io-client');
 const { jobRule, schedule, getAllDetails } = require('./jobs');
+const { cache } = require('./utils');
 
 var mainJob = null;
 
 const socketURL = process.env.SOCKET_URL;
 const TEST = process.env.TEST === "TRUE";
 var socket = io.connect(socketURL, { reconnect: true });
+
+const cacheSystem = new cache(60 * 60 * 24).i //for 24 days
+
+
+const saveCache = (data) => {
+    const isCached = cacheSystem.get(`log`); // Cache Control
+    if (isCached.status) {
+        cacheSystem.set(`log`, [...isCached.data, data]);
+    }
+    else {
+        cacheSystem.set(`log`, [data]);
+    }
+}
+
+
+const sendOldCacheToServer = () => {
+    const isCached = cacheSystem.get(`log`); // Cache Control
+    if (isCached.status) {
+        let filtered = isCached.data.filter(item => !item.sended); // filter only sended=false
+        if (filtered.length) {
+            socket.emit('syncDevice', { device_id: 1, data: filtered });
+        }
+    }
+}
 
 const startJob = () => {
     if (mainJob) {
@@ -17,7 +42,14 @@ const startJob = () => {
         mainJob = schedule.scheduleJob(jobRule, async function () {
             const data = await getAllDetails();
             if (data.status) {
-                socket.emit('deviceData', { device_id: 1, data: data.data });
+
+                if (socket.connected) {
+                    saveCache({ data: data.data, timestamp: new Date().valueOf(), sended: true })
+                    socket.emit('deviceData', { device_id: 1, data: data.data });
+                }
+                else {
+                    saveCache({ data: data.data, timestamp: new Date().valueOf(), sended: false })
+                }
             }
         });
     }
@@ -72,6 +104,7 @@ socket.on('connect', function () {
         }, 2000)
     }
     else {
+        sendOldCacheToServer();
         startJob();
     }
 
