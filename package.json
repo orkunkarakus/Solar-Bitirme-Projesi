@@ -1,0 +1,32 @@
+{
+  "name": "solar-bitirme-projesi",
+  "version": "0.0.1",
+  "description": "solar bitirme projesi",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js",
+    "start": "node index.js",
+    "udev-install": "./node_modules/axpert-monitor/setup/udev-setup.sh",
+    "postinstall": "npm run udev-install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/orkunkarakus/solar-bitirme-projesi.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/orkunkarakus/solar-bitirme-projesi/issues"
+  },
+  "homepage": "https://github.com/orkunkarakus/solar-bitirme-projesi#readme",
+  "dependencies": {
+    "axpert-monitor": "^1.0.0",
+    "child_process": "^1.0.2",
+    "dotenv": "^16.0.1",
+    "node-schedule": "^2.1.0",
+    "socket.io-client": "^4.5.0"
+  },
+  "devDependencies": {
+    "socket.io": "^4.5.0"
+  }
+}
